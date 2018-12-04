@@ -25,8 +25,14 @@ nmap = `nmap -sP #{base}/#{br} | awk '/^Nmap/ {printf $5" "} /^MAC/ {print $3}'`
 
 $menu = nmap.lines.map { |line| line.split(" ").reverse.join("\t") }[0..-2]
 
+puts "Your mac address is : #{$MAC_ADDR}"
+
 at_exit do
-	exec "ip link set addr #{$MAC_ADDR} dev #{$INTERFACE}"
+	`ip link set #{$INTERFACE} down`
+	`ip link set addr #{$MAC_ADDR} dev #{$INTERFACE}`
+	`ip link set #{$INTERFACE} up`
+
+	puts "Your mac address is : #{$MAC_ADDR}"
 end
 
 init_screen
@@ -63,9 +69,13 @@ while ch = cmenu.getch
 	when "\n", " "
 		puts $menu[position]
 		mac = $menu[position].split("\t")[0]
+		`ip link set #{$INTERFACE} down`
 		`ip link set addr #{mac} dev #{$INTERFACE}`
+		`ip link set #{$INTERFACE} up`
 		`ping #{router} -i 0`
+		`ip link set #{$INTERFACE} down`
 		`ip link set addr #{$MAC_ADDR} dev #{$INTERFACE}`
+		`ip link set #{$INTERFACE} up`
 	when 'x'
 		exit
 	end
