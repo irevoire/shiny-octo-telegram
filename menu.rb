@@ -53,20 +53,28 @@ class Menu
 
 	# take a list of index (0 < int < menu.size)
 	# Draw the menu with all indexes highlighted
-	def draw_menu *active_index
+	def draw *active_index
 		@menu.each_with_index do |item, idx|
+			print "\e[2K"
 			if active_index.include? idx
 				print "\e[45;30m"
 				print item
 				puts "\e[m"
 			else
-				puts item
+				print item
+				puts
 			end
 		end
 	end
 
-	def clear
+	def reset
 		print "\e[#{self.size}A"
+	end
+
+	def clear
+		@menu.size.times {
+			print "\e[A\e[K"
+		}
 	end
 
 	def size

@@ -36,10 +36,17 @@ $MAC_ADDR = networkManager.mac $INTERFACE
 base = ipaddr.split(".")[0..2].append("*").join(".")
 router = networkManager.router $INTERFACE
 
-nmap = `nmap -sP #{base} | awk '/^Nmap/ {printf $5" "} /^MAC/ {print $3}'`
-menu = nmap.lines.map { |line| line.split(" ").reverse.join("\t") }[0..-2]
-
 puts "Your mac address is : #{$MAC_ADDR}"
+
+require_relative "nmap"
+if !Nmap.available?
+	puts "You should install nmap"
+	exit
+end
+
+puts "Calling nmap"
+menu = Nmap.getDevice base
+
 at_exit do
 	puts "Your mac address before exit is : #{networkManager.mac $INTERFACE}"
 	networkManager.mac $INTERFACE, $MAC_ADDR
@@ -49,13 +56,18 @@ end
 position = 0
 menu = Menu.new menu
 
-menu.draw_menu(position)
+menu.draw(position)
 while ch = menu.get_char
 	case ch
 	when "k", :up
 		position -= 1
 	when "j", :down
 		position += 1
+	when "r"
+		menu.clear
+		puts "Calling nmap"
+		menu.menu = Nmap.getDevice base
+		menu.draw position
 	when "\n", " "
 		puts menu.menu[position]
 		mac = menu.menu[position].split("\t")[0]
@@ -67,6 +79,6 @@ while ch = menu.get_char
 
 	position = menu.size - 1 if position < 0
 	position = 0 if position >= menu.size
-	menu.clear
-	menu.draw_menu(position)
+	menu.reset
+	menu.draw(position)
 end
