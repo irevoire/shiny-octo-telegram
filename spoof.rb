@@ -36,6 +36,7 @@ $MAC_ADDR = networkManager.mac $INTERFACE
 base = ipaddr.split(".")[0..2].append("*").join(".")
 router = networkManager.router $INTERFACE
 
+puts "Your router address is : #{router}"
 puts "Your mac address is : #{$MAC_ADDR}"
 
 require_relative "nmap"
@@ -72,7 +73,7 @@ while ch = menu.get_char
 		puts menu.menu[position]
 		mac = menu.menu[position].split("\t")[0]
 		networkManager.mac $INTERFACE, mac
-		`ping #{router} -i 0`
+		`ping #{router} -i 0 > /dev/null`
 	when 'x'
 		exit
 	end
