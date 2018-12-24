@@ -14,35 +14,36 @@ end
 
 require_relative "ip/iproute2"
 require_relative "ip/ifconfig"
-Ip = nil
+networkManager = nil
 if Iproute2.available?
-	Ip = Iproute2
+	puts "using iproute2"
+	networkManager = Iproute2
 elsif Ifconfig.available?
-	Ip = Ifconfig
+	puts "using ifconfig"
+	networkManager = Ifconfig
 else
 	puts "You should install ifconfig or iproute2"
 	exit
 end
 
 base = nil
-ip = nil
+ipaddr = nil
 router = nil
 
-puts "using iproute2"
-ip = Ip.ip $INTERFACE
-$MAC_ADDR = Ip.mac $INTERFACE
+ipaddr = networkManager.ip $INTERFACE
+$MAC_ADDR = networkManager.mac $INTERFACE
 # TODO base should depend on the br
-base = ip.split(".")[0..2].append("*").join(".")
-router = Ip.router $INTERFACE
+base = ipaddr.split(".")[0..2].append("*").join(".")
+router = networkManager.router $INTERFACE
 
 nmap = `nmap -sP #{base} | awk '/^Nmap/ {printf $5" "} /^MAC/ {print $3}'`
 menu = nmap.lines.map { |line| line.split(" ").reverse.join("\t") }[0..-2]
 
 puts "Your mac address is : #{$MAC_ADDR}"
 at_exit do
-	puts "Your mac address before exit is : #{Ip.mac $INTERFACE}"
-	Ip.mac $INTERFACE, $MAC_ADDR
-	puts "Your mac address after exit is : #{Ip.mac $INTERFACE}"
+	puts "Your mac address before exit is : #{networkManager.mac $INTERFACE}"
+	networkManager.mac $INTERFACE, $MAC_ADDR
+	puts "Your mac address after exit is : #{networkManager.mac $INTERFACE}"
 end
 
 position = 0
@@ -58,7 +59,7 @@ while ch = menu.get_char
 	when "\n", " "
 		puts menu.menu[position]
 		mac = menu.menu[position].split("\t")[0]
-		Ip.mac $INTERFACE, mac
+		networkManager.mac $INTERFACE, mac
 		`ping #{router} -i 0`
 	when 'x'
 		exit
