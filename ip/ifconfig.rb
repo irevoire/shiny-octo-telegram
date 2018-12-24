@@ -17,14 +17,12 @@ class Ifconfig
 			ip_link = `ifconfig #{int}`
 			return ip_link[/ether (.+?) /m, 1]
 		end
-		`ifconfig #{int} down`
 		`ifconfig #{int} ether #{mac}`
-		`ifconfig #{int} up`
 	end
 
 	# interface -> router
 	def self.router int
 		ip_link = `route -n get default`
-		return ip_link[/gateway: (.+?)/m, 1]
+		return ip_link[/gateway: (.+?) /m, 1]
 	end
 end
